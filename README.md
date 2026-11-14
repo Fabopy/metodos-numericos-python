@@ -59,9 +59,7 @@ $$
 donde $f(x_i, y_i)$ es la ecuación diferencial evaluada en $x_i$ y $y_i$. La estimación se sustituye en la ecuación:
 
 $$
-\begin{equation}
 y_{i+1} = y_i + f(x_i, y_i)(x_{i+1} - x_i)
-\end{equation}
 $$
 
 Esta fórmula se conoce como **método de Euler**. Veamos un ejemplo:
@@ -139,9 +137,7 @@ Un método para mejorar la estimación de la pendiente emplea la determinación 
 La ecuación correctora es:
 
 $$
-\begin{equation}
 y_{i+1} = y_i + \frac{f(x_i, y_i) + f(x_{i+1}, y_{i+1}^0)}{2}h
-\end{equation}
 $$
 
 donde $y_{i+1}^0 = y_i + f(x_i, y_i)h$. Veamos el ejemplo anterior pero aplicando la función `edos.heun`:
@@ -161,15 +157,16 @@ $$
 La que se emplea en este repositorio es el **Método de Ralston** ($a_2 = 2/3$):
 
 $$
-\begin{equation}
 y_{i+1} = y_i + \left(\frac{1}{3}k_1 + \frac{2}{3}k_2\right)h
-\end{equation}
 $$
 
 donde 
 
 $$
-k_1 = f(x_i, y_i)\\[0.3cm]
+k_1 = f(x_i, y_i)
+$$
+
+$$
 k_2 = f\left(x_i + \frac{3}{4}h, y_i + \frac{3}{4}k_1h\right)
 $$
 
