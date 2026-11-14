@@ -76,6 +76,8 @@ def RK2(rhs, y0, t_eval):
     rhs : función de lado derecho
     y0 : condición inicial
     t_span : intervalo de integración
+    
+    Método de Ralston (a_2 = 2/3)
     '''
     n = t_eval.size
     h = t_eval[1] - t_eval[0] 
