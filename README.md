@@ -40,7 +40,43 @@ $$
 y_{i+1} = y_i + \frac{dy}{dx}(x_{i+1} - x_i)
 $$
 
-donde generalmente a $dy/dx$ se le denota con $\phi$ y $(x_{i+1} - x_i) = h$ es el paso.
+donde generalmente a $dy/dx$ se le denota con $\phi$ y $(x_{i+1} - x_i) = h$ es el paso. Existen varias formas de calcular $y_{i+1}$ pero las más conocidas son:
+
+- Método de Euler
+- Método de Heun
+- Runge-Kutta de 2do orden
+- Runge-Kutta de 4to orden
+
+
+### Método de Euler
+La primera derivada ofrece una estimación directa de la pendiente en $x_i$:
+
+$$
+\phi = f(x_i, y_i)
+$$
+
+
+donde $f(x_i, y_i)$ es la ecuación diferencial evaluada en $x_i$ y $y_i$. La estimación se sustituye en la ecuación:
+
+$$
+y_{i+1} = y_i + f(x_i, y_i)(x_{i+1} - x_i)
+$$
+
+Esta fórmula se conoce como **método de Euler**. Veamos un ejemplo:
+
+$$
+\frac{dv}{dt} = g - \frac{c}{m}v
+$$
+
+La solución analítica de esta ecuación diferencial es:
+
+$$
+v(t) = \frac{gm}{c}\left(1 - e^{-c/m \ t}\right)
+$$
+
+![metodoEuler](C:\Users/fabri/OneDrive/Documents/PythonSpyder/foto_euler.pdf)
+
+
 
 
 ## Ecuaciones Diferenciales Parciales
