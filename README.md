@@ -75,7 +75,7 @@ v(t) = \frac{gm}{c}\left(1 - e^{-c/m \ t}\right)
 $$
 
 
-![metodoEuler](C:/Users/fabri/OneDrive/Documents/PythonSpyder/foto_euler.pdf)
+![Euler](PythonSpyder/foto_euler.pdf)
 
 
 
