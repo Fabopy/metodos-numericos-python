@@ -75,7 +75,7 @@ v(t) = \frac{gm}{c}\left(1 - e^{-c/m \ t}\right)
 $$
 
 
-![Euler](imagenes/foto_euler.png)
+![Euler](Metodos_Chapra/imagenes/foto_euler.png)
 
 
 
