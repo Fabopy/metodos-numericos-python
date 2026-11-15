@@ -146,7 +146,7 @@ donde $y_{i+1}^0 = y_i + f(x_i, y_i)h$. Veamos el ejemplo anterior pero aplicand
 
 El código se realiza de la misma forma que el `euler` ya que los 3 argumentos se conservan.
 
-### Método de Runke-Kutta de segundo orden
+### Método de Runge-Kutta de segundo orden
 
 La versión de segundo orden de la familia de los métodos RK es:
 
@@ -172,8 +172,108 @@ $$
 
 Los argumentos a ingresar en la función `RK2` son los mismos que para `euler` y `heun`.
 
+### Método de Runge-Kutta de cuarto orden
+
+La forma comúnmente usada es:
+
+$$
+y_{i+1} = y_i + \frac{1}{6}(k_1 + 2k_2 + 2k_3 + k_4)h
+$$
+
+donde
+
+$$
+k_1 = f(x_i, y_i)
+$$
+
+$$
+k_2 = f(x_i + \frac{1}{2}h, y_i + \frac{1}{2}k_1h)
+$$
+
+$$
+k_3 = f(x_i + \frac{1}{2}h, y_i + \frac{1}{2}k_2h)
+$$
+
+$$
+k_4 = f(x_i + h, y_i + k_3h)
+$$
+
+Veamos el siguiente ejemplo:
+
+$$
+\frac{dx}{dt} = Ax - Bxy
+$$
+
+$$
+\frac{dy}{dt} = -Cy + Dxy
+$$
+
+Dichas ecuaciones son las de [Lotka-Volterra](https://es.wikipedia.org/wiki/Ecuaciones_de_Lotka-Volterra). Utilizamos la función `edo.RK4`
 
 
+![lokta-volterra](imagenes/lotka_volterra_rk4.png)
+
+```
+from Metodos_Chapra.edos import RK4
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.integrate import solve_ivp
+
+
+A = 1.5 ; B = 1 ; C = 3 ; D = 1
+def lotka_volterra(t, S):
+    x, y = S
+    dx = A*x - B*x*y
+    dy = -C*y + D*x*y
+    
+    dS = [dx, dy]
+    return dS
+
+lotka_volterra_sistema = [lambda t, x, y : A*x - B*x*y, lambda t, x, y : -C*y + D*x*y]
+
+x0 = 10 ; y0 = 5
+t0 = 0 ; tf = 10
+n = 2000
+t_malla = np.linspace(t0, tf, n)
+metodo = 'RK45'
+
+sol = solve_ivp(lotka_volterra, t_span = [t0, tf], y0 = [x0, y0], t_eval = t_malla, method = metodo)
+
+#Por Euler
+sol_e = euler_sistema(lotka_volterra_sistema, [x0, y0], t_malla)
+xt_euler = sol_e[0] 
+yt_euler = sol_e[1]
+
+#Por RK45
+sol_rk4 = RK4(lotka_volterra_sistema, [x0, y0], t_malla)
+xt_rk4 = sol_rk4[0]
+yt_rk4 = sol_rk4[1]
+
+if sol.success:
+    fig = plt.figure(figsize = (14, 7), dpi = 140)
+    plt.grid(linestyle = '-.')
+    plt.xlabel('t [s]')
+    plt.ylabel('x y')
+    plt.title(f'Ecuaciones de Lotka-Volterra por método de {metodo}')
+    
+    xt = sol.y[0]
+    yt = sol.y[1]
+    t = sol.t
+    
+    #Solución por solve_ivp con método RK45
+    plt.plot(t, xt, color = 'purple', linewidth = 1.8, label = r'$x(t)$')
+    plt.plot(t, yt, color = 'orange', linewidth = 1.8, label = r'$y(t)$')
+    
+    #Por mi RK45
+    plt.plot(t, xt_rk4, color = 'purple', linewidth = 1.5, label = r'$x(t)$ edos.RK4', linestyle = '--')
+    plt.plot(t, yt_rk4, color = 'orange', linewidth = 1.5, label = r'$y(t)$ edos.RK4', linestyle = '--')
+    
+    
+    
+    plt.legend()
+```
+
+Se observa la diferencia entre el método empleado por `solve_ivp` y `RK4`. `solve_ivp` utiliza el método de Runge-Kutta 4(5) o método de Dormand-Prince, que pertenece a la familia de RK pero adaptativo, es decir, tienen *control adaptativo del tamaño de paso*. En cambio, `RK4` utiliza un paso constante, por eso la diferencia al final de la figura.
 
 
 ## Ecuaciones Diferenciales Parciales
