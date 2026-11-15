@@ -8,13 +8,18 @@ Libro
 
 Los temas son:
 
-1. [Raíces de ecuaciones](#raíces-de-ecuaciones)
-2. [Ecuaciones Algebraicas Lineales](#ecuaciones-algebraicas-lineales)
-3. [Optimización](#optimización)
-4. [Ajuste de Curvas](#ajuste-de-curvas)
-5. [Diferenciación e Integración Numérica](#diferenciación-e-integración-numérica)
-6. [Ecuaciones Diferenciales Ordinarias](#ecuaciones-diferenciales-ordinarias)
-7. [Ecuaciones Diferenciales Parciales](#ecuaciones-diferenciales-parciales)
+
+- [Raíces de ecuaciones](#raíces-de-ecuaciones)
+- [Ecuaciones Algebraicas Lineales](#ecuaciones-algebraicas-lineales)
+- [Optimización](#optimización)
+- [Ajuste de Curvas](#ajuste-de-curvas)
+- [Diferenciación e Integración Numérica](#diferenciación-e-integración-numérica)
+- [Ecuaciones Diferenciales Ordinarias](#ecuaciones-diferenciales-ordinarias)
+  - [Método de Euler](#método-de-euler)  
+  - [Método de Heun](#método-de-heun)  
+  - [Método de RK2](#método-de-rk2)  
+  - [Método de RK4](#método-de-rk4)  
+- [Ecuaciones Diferenciales Parciales](#ecuaciones-diferenciales-parciales)
 
 ## Raíces de ecuaciones
 
