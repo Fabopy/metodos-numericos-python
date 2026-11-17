@@ -22,7 +22,7 @@ def euler(rhs, y0, t_eval):
 
 def euler_sistema(rhs, y0, t_eval):
     '''
-    rhs : lista de las ecuaciones diferenciales. Solamente resuelve un sistema de ecuaciones
+    rhs : lista de las ecuaciones diferenciales. Solamente resuelve un sistema de ecuaciones 2x2
     y0 : sequence de las condiciones iniciales
     t_eval : malla
     '''
@@ -71,19 +71,27 @@ def heun(rhs, y0, t_eval):
     
     return Y
     
-def RK2(rhs, y0, t_eval):
+def RK2(rhs, y0, t_eval, a2 = None):
     '''
     rhs : función de lado derecho
     y0 : condición inicial
     t_span : intervalo de integración
     
-    Método de Ralston (a_2 = 2/3)
+    a_2 = 1/2 Método de Heun con un solo corrector
+    a_2 = 1 Método del punto medio
+    a_2 = 2/3 Método de Ralston 
     '''
     n = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
     Y = np.zeros(n) ; Y[0] = y0
     for i in range(0, n - 1, 1):
+        if a2 == 1/2:
+            k1 = rhs(t_eval[i], Y[i])
+            k2 = rhs(t_eval[i] + 1/2*h, Y[i] + 1/2*k1*h)
+        elif a2 == 1:
+            pass
+            
         k1 = rhs(t_eval[i], Y[i])
         k2 = rhs(t_eval[i] + 3/4*h, Y[i] + 3/4*k1*h)
         Y[i + 1] = Y[i] + (1/3*k1 + 2/3*k2)*h
@@ -128,6 +136,8 @@ def RK4(rhs, y0, t_eval):
     
     return Y1, Y2
         
+
+
  
 if __name__ == '__main__':
     pass

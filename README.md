@@ -10,6 +10,8 @@ Los temas son:
 
 
 - [Raíces de ecuaciones](#raíces-de-ecuaciones)
+  - [Métodos Cerrados](#métodos-cerrados) 
+    - [Método de la Bisección](#método-de-la-bisección)
 - [Ecuaciones Algebraicas Lineales](#ecuaciones-algebraicas-lineales)
 - [Optimización](#optimización)
 - [Ajuste de Curvas](#ajuste-de-curvas)
@@ -22,6 +24,79 @@ Los temas son:
 - [Ecuaciones Diferenciales Parciales](#ecuaciones-diferenciales-parciales)
 
 ## Raíces de ecuaciones
+
+Supongamos el siguiente caso: se desea determinar las características del flujo alrededor
+de una ojiva de misil. Cuando el misil alcanza velocidades supersónicas, el flujo (aire) produce cambios muy rápidos en las propiedades debido a este incremento de energía cinética.
+Tales cambios tienen lugar sobre una distancia tan pequeña comparada con una dimensión
+característica del movimiento que, desde el punto de vista de las aplicaciones prácticas, pueden ser consideradas como una verdadera discontinuidad. Estas discontinuidades, a través
+de las cuales se produce una variación finita de las magnitudes físicas del movimiento, se
+denominan ondas de choque. Estas discontinuidades se manifiestan en forma inclinada a
+la dirección del flujo incidente y se denominan ondas de choques oblicuas. La
+relación entre $V_1$, el ángulo de la ojiva $\theta$ y el ángulo de choque de la onda 
+$\theta_0$ está dada por
+la siguiente ecuación:
+
+$$
+\tan\theta = \frac{2(M_1^2\sin^2\theta_0 - 1)}{\tan\theta_0[M_1^2(\gamma + \cos2\theta_0) + 2]}
+$$
+
+Dicha expresión fue sacada del libro [Aplicaciones de la Dinámica de los Gases a Flujos Inestacionarios y Supersónicos](https://www.universitaseditorial.com.ar/productos/aplicacion-de-la-dinamica-de-los-gases-tamagno/). 
+
+$M_1 = V_1/a$ es el número de Mach, siendo $a$ la velocidad del sonido. El valor de $\gamma$ se denomina coeficiente adiabático y para el aire tiene un valor de 1,4. Se deduce de esta
+ecuación que si se conoce $\theta$ y la velocidad del flujo $V_1$ se puede determinar el ángulo que
+forma la onda de choque. El problema de esta ecuación es que $\theta_0$ está implícita y no hay
+forma de despejarla. Por lo tanto la única forma de resolver dicho problema es crear otra función de la forma $F(\theta_0)$ y aquel valor de $\theta_0$ tal que haga $F(\theta_0) = 0$ es la raíz al problema, es decir, el valor que se busca. 
+
+### Métodos Cerrados
+Éstos métodos se aprovechan del Teorema de Bolzano
+
+>[!NOTE]
+>
+>Toda función continua en un intervalo que toma valores positivos y negativos se anula en algún punto de dicho intervalo. Es decir, sea un intervalo $I = [a, b]$ donde la función es continua y está definida en $I$, por lo tanto $\exist \ c \in I / f(c) = 0$.
+
+#### Método de la Bisección
+Una primera aproximación a la raíz son los métodos gráficos
+
+![grafico](imagenes/RAICES/metodo_grafico.png)
+
+
+Según la física detrás de las ondas de choque, los límites son $0^{\circ}$ (no existe onda de choque) y $90^{\circ}$ (onda de choque recto). Estos valores permiten definir un intervalo donde se encuentra la raíz de $F$ y los *métodos cerrados* son una muy buena opción para estos tipos de problemas. El siguiente código representa cómo implementar este método usando la función `raices.biseccion`
+
+```
+#velocidad de la ojiva en m/s
+v1 = 850
+
+#ángulo de la ojiva
+th = np.deg2rad(15)
+
+#Constante de los gases, coeficiente adiabático y temperatura
+R = 287.05287 ; gamma = 1.4 ; T = 288.15
+
+#Velocidad del sonido y Mach
+a = np.sqrt(gamma*R*T)
+M1 = v1/a
+
+#Función
+F = lambda x : np.tan(th) - 2*(M1**2*np.sin(x)**2 - 1)/(np.tan(th)*(M1**2*(gamma + np.cos(2*x)) + 2))
+xl = np.deg2rad(10) ; xu = np.deg2rad(40)
+x_malla = np.linspace(xl, xu, 100)
+
+
+fig = plt.figure(figsize = (14, 7), dpi = 140)
+plt.grid(linestyle = '-.')
+plt.title('Método gráfico')
+plt.xlabel(r'$\theta_0$')
+plt.ylabel(r'$F$')
+
+plt.plot(x_malla, F(x_malla))
+
+cr, _ = biseccion(F, xl = xl, xu = xu)
+
+#Verificación
+if np.isclose(F(cr), 0):
+    print(f'{cr} es la raíz de f')
+```
+
 
 ## Ecuaciones Algebraicas Lineales
 
