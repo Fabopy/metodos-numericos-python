@@ -12,6 +12,7 @@ Los temas son:
 - [Raíces de ecuaciones](#raíces-de-ecuaciones)
   - [Métodos Cerrados](#métodos-cerrados) 
     - [Método de la Bisección](#método-de-la-bisección)
+    - [Método de Falsa Posición](#método-de-falsa-posición)
 - [Ecuaciones Algebraicas Lineales](#ecuaciones-algebraicas-lineales)
 - [Optimización](#optimización)
 - [Ajuste de Curvas](#ajuste-de-curvas)
@@ -52,7 +53,9 @@ forma de despejarla. Por lo tanto la única forma de resolver dicho problema es 
 
 >[!NOTE]
 >
->Toda función continua en un intervalo que toma valores positivos y negativos se anula en algún punto de dicho intervalo. Es decir, sea un intervalo $I = [a, b]$ donde la función es continua y está definida en $I$, por lo tanto $\exist \ c \in I / f(c) = 0$.
+>Toda función continua en un intervalo que toma valores positivos y negativos se anula en algún punto de dicho intervalo. Es decir, sea un intervalo $I = [a, b]$ donde la función es continua y está definida en $I$, por lo tanto existe $c \in I / f(c) = 0$.
+>
+> Fuente: *Cálculo Diferencial e Integral de Funciones de una Variable* de Francisco Javier Pérez González
 
 #### Método de la Bisección
 Una primera aproximación a la raíz son los métodos gráficos
@@ -60,7 +63,7 @@ Una primera aproximación a la raíz son los métodos gráficos
 ![grafico](imagenes/RAICES/metodo_grafico.png)
 
 
-Según la física detrás de las ondas de choque, los límites son $0^{\circ}$ (no existe onda de choque) y $90^{\circ}$ (onda de choque recto). Estos valores permiten definir un intervalo donde se encuentra la raíz de $F$ y los *métodos cerrados* son una muy buena opción para estos tipos de problemas. El siguiente código representa cómo implementar este método usando la función `raices.biseccion`
+Según la física detrás de las ondas de choque, los límites son $0^{\circ}$ (no existe onda de choque) y $90^{\circ}$ (onda de choque recto). Estos valores permiten definir un intervalo donde se encuentra la raíz de $F$ y los *métodos cerrados* son una muy buena opción para estos tipos de problemas. El siguiente código representa cómo implementar este método usando la función `raices.Cerrado.biseccion`
 
 ```
 #velocidad de la ojiva en m/s
@@ -90,13 +93,29 @@ plt.ylabel(r'$F$')
 
 plt.plot(x_malla, F(x_malla))
 
-cr, _ = biseccion(F, xl = xl, xu = xu)
+raiz = Cerrado(F, xl = xl, xu = xu)
+cr = raiz.biseccion()
 
 #Verificación
-if np.isclose(F(cr), 0):
-    print(f'{cr} es la raíz de f')
+if np.isclose(F(cr.xr), 0):
+    print(f'{cr.xr} es la raíz de f')
 ```
 
+#### Método de Falsa Posición o *Regula Falsi*
+Para este método será útil la siguiente expresión:
+
+$$
+x_r = x_u - \frac{f(x_u)(x_l - x_u)}{f(x_l) - f(x_u)}
+$$
+
+Conocida como la fórmula de la falsa posición. Al igual que el método de bisección, este método se aprovecha de que encerramos la raíz. Para usar dicha función usamos `raices.Cerrado.regula_falsi`
+
+```
+raiz = Cerrado(F, xl = xl, xu = xu)
+cr_rg = raiz.regula_falsi()
+```
+
+La diferencia radica en las iteraciones. Para el método de la bisección se necesitaron 29 iteraciones, en cambio para falsa posición 14.
 
 ## Ecuaciones Algebraicas Lineales
 
