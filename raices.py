@@ -1,100 +1,139 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import fsolve
+from scipy.optimize import OptimizeResult
+
+class RootResult(OptimizeResult):
+    xr : float
+    ea : float
+    i : float
+    
 
 def error(xu, xi):
     return np.abs(xu - xi)/xu*100
 
 class Cerrado:
-    pass
-
-
-def biseccion(func, xl, xu, es = None):
-   if xl > xu:
-       a = np.array([xu, xl])
-       xu, xl = np.flip(a)
-       
-   if es is not None:
-       es = es
-   else:
-       es = 1e-7
-       
-   ea = 100
-    
-   while es < ea:
-       xr = (xl + xu)/2
-       p = func(xl)*func(xr)
-       if p > 0:
-           xl = xr
-           xnew = (xl + xu)/2
-       else:
-           xu = xr
-           xnew = (xl + xu)/2
-           
-       ea = error(xnew, xr) 
-       
-   return xr, ea
-               
-
-def regula_falsi(func, xl, xu, es = None):
-    if xl > xu:
-        a = np.array([xu, xl])
-        xu, xl = np.flip(a)
-        
-    if es is not None:
-        es = es
-    else:
-        es = 1e-7
-        
-    ea = 100
-    
-    while es < ea:
-        xr = xu - func(xu)*(xl - xu)/(func(xl) - func(xu))
-        p = func(xl)*func(xr)
-        if p > 0:
-            xrold = xr
-            xl = xrold
-            xnew = xu - func(xu)*(xl - xu)/(func(xl) - func(xu))
-            ea = error(xnew, xrold)
+    def __init__(self, func, xl, xu, es = None):
+        self.f = func
+        self.xl = xl
+        self.xu = xu
+        if es is not None:
+            self.es = es
         else:
-            xrold = xr
-            xu = xrold
-            xnew = xu - func(xu)*(xl - xu)/(func(xl) - func(xu))
+            self.es = 1e-7
+            
+                
+    def biseccion(self):
+        if self.xl > self.xu:
+            a = np.array([self.xu, self.xl])
+            self.xu, self.xl = np.flip(a)
+            
+        ea = 100
+        i = 0
+        l = self.xl
+        u = self.xu
+        
+        while self.es < ea:
+            xr = (l + u)/2
+            p = self.f(l)*self.f(xr)
+            if p > 0:
+                l = xr
+                xnew = (l + u)/2
+            else:
+                u = xr
+                xnew = (l + u)/2
+                
+            ea = error(xnew, xr) 
+            i += 1
+        
+        return RootResult(xr = xr, 
+                          ea = ea,
+                          i = i)
+    
+    def regula_falsi(self):
+        if self.xl > self.xu:
+            a = np.array([self.xu, self.xl])
+            self.xu, self.xl = np.flip(a)
+            
+        g = lambda l, u : u - self.f(u)*(l - u)/(self.f(l) - self.f(u))
+        
+        ea = 100
+        i = 0
+        l = self.xl
+        u = self.xu
+        
+        while self.es < ea:
+            xr = g(l, u)
+            p = self.f(l)*self.f(xr)
+            if p > 0:
+                xrold = xr
+                l = xrold
+                xnew = g(l, u)
+            else:
+                xrold = xr
+                u = xrold
+                xnew = g(l, u)
+                
             ea = error(xnew, xrold)
+            i += 1
+        
+        return RootResult(xr = xr, 
+                          ea = ea,
+                          i = i)
     
-    return xr, ea
+    def regula_falsi_mod(self):
+        if self.xl > self.xu:
+            a = np.array([self.xu, self.xl])
+            self.xu, self.xl = np.flip(a)
+        
+        ea = 100
+        i = 0
+        l = self.xl
+        u = self.xu
+        fl = self.f(l)
+        fu = self.f(u)
+        il = 0
+        iu = 0
+        
+        while self.es < ea:
+            xr = u - fu*(l - u)/(fl - fu)
+            xrold = xr
+            fr = self.f(xr)
+            i += 1
+            p = fl*fr
+            if p < 0:
+                u = xr
+                fu = self.f(u)
+                il = il + 1
+                iu = 0
+                xnew = u - fu*(l - u)/(fl - fu)
+                ea = error(xnew, xrold)
+                if il >= 2:
+                    fl = fl/2
+            else:
+                l = xr
+                fl = self.f(l)
+                iu = iu + 1
+                il = 0
+                xnew = u - fu*(l - u)/(fl - fu)
+                ea = error(xnew, xrold)
+                if iu >= 2:
+                    fu = fu/2
+            i += 1
+                    
+        return RootResult(xr = xr, 
+                          ea = ea,
+                          i = i)
+            
+                
+
+        
+        
+
+
+
+
+
+    
     
 
-def regula_falsi_mod(func, xl, xu, es = None):
-    pass
-    
 
 
-
-
-v1 = 850
-th = np.deg2rad(15)
-R = 287.05287 ; gamma = 1.4 ; T = 288.15
-a = np.sqrt(gamma*R*T)
-M1 = v1/a
-F = lambda x : np.tan(th) - 2*(M1**2*np.sin(x)**2 - 1)/(np.tan(th)*(M1**2*(gamma + np.cos(2*x)) + 2))
-xl = np.deg2rad(10) ; xu = np.deg2rad(40)
-x_malla = np.linspace(xl, xu, 100)
-
-
-fig = plt.figure(figsize = (14, 7), dpi = 140)
-plt.grid(linestyle = '-.')
-plt.title('Método gráfico')
-plt.xlabel(r'$\theta_0$')
-plt.ylabel(r'$F$')
-
-plt.plot(x_malla, F(x_malla))
-
-# plt.savefig('Metodos_Chapra/imagenes/RAICES/metodo_grafico.png', dpi = 300, bbox_inches="tight")
-
-cr, _ = biseccion(F, xl = xl, xu = xu)
-cr_rg, _ = regula_falsi(F, xl, xu)
-
-#Verificación
-if np.isclose(F(cr), 0):
-    print(f'{cr} es la raíz de f')
