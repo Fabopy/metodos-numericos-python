@@ -5,6 +5,10 @@ from scipy.optimize import fsolve
 def error(xu, xi):
     return np.abs(xu - xi)/xu*100
 
+class Cerrado:
+    pass
+
+
 def biseccion(func, xl, xu, es = None):
    if xl > xu:
        a = np.array([xu, xl])
@@ -31,6 +35,43 @@ def biseccion(func, xl, xu, es = None):
        
    return xr, ea
                
+
+def regula_falsi(func, xl, xu, es = None):
+    if xl > xu:
+        a = np.array([xu, xl])
+        xu, xl = np.flip(a)
+        
+    if es is not None:
+        es = es
+    else:
+        es = 1e-7
+        
+    ea = 100
+    
+    while es < ea:
+        xr = xu - func(xu)*(xl - xu)/(func(xl) - func(xu))
+        p = func(xl)*func(xr)
+        if p > 0:
+            xrold = xr
+            xl = xrold
+            xnew = xu - func(xu)*(xl - xu)/(func(xl) - func(xu))
+            ea = error(xnew, xrold)
+        else:
+            xrold = xr
+            xu = xrold
+            xnew = xu - func(xu)*(xl - xu)/(func(xl) - func(xu))
+            ea = error(xnew, xrold)
+    
+    return xr, ea
+    
+
+def regula_falsi_mod(func, xl, xu, es = None):
+    pass
+    
+
+
+
+
 v1 = 850
 th = np.deg2rad(15)
 R = 287.05287 ; gamma = 1.4 ; T = 288.15
@@ -52,6 +93,7 @@ plt.plot(x_malla, F(x_malla))
 # plt.savefig('Metodos_Chapra/imagenes/RAICES/metodo_grafico.png', dpi = 300, bbox_inches="tight")
 
 cr, _ = biseccion(F, xl = xl, xu = xu)
+cr_rg, _ = regula_falsi(F, xl, xu)
 
 #Verificación
 if np.isclose(F(cr), 0):
