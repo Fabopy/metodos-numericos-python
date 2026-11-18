@@ -29,6 +29,7 @@ class Cerrado:
             
                 
     def biseccion(self):
+        metodo = 'Bisección'
         if self.xl > self.xu:
             a = np.array([self.xu, self.xl])
             self.xu, self.xl = np.flip(a)
@@ -57,9 +58,11 @@ class Cerrado:
         
         return RootResult(xr = xr, 
                           ea = ea,
-                          i = i)
+                          i = i,
+                          method = metodo)
     
     def regula_falsi(self):
+        metodo = 'Falsa posición'
         if self.xl > self.xu:
             a = np.array([self.xu, self.xl])
             self.xu, self.xl = np.flip(a)
@@ -91,9 +94,11 @@ class Cerrado:
         
         return RootResult(xr = xr, 
                           ea = ea,
-                          i = i)
+                          i = i,
+                          method = metodo)
     
     def regula_falsi_mod(self):
+        metodo = 'Falsa posición modificada'
         if self.xl > self.xu:
             a = np.array([self.xu, self.xl])
             self.xu, self.xl = np.flip(a)
@@ -137,7 +142,8 @@ class Cerrado:
                     
         return RootResult(xr = xr, 
                           ea = ea,
-                          i = i)
+                          i = i,
+                          method = metodo)
             
                 
 
@@ -157,12 +163,12 @@ class Abierto:
             self.imax = 500
             
             
-    def PuntoFijo(self):
+    def PuntoFijo(self, g):
         '''
         Considerar que la forma de construir g(x) puede no converger y otras sí
         '''
+        metodo = 'Punto Fijo'
         ea = 100
-        g = self.f
         i = 0
         xrold = self.x0
         
@@ -178,20 +184,24 @@ class Abierto:
             return RootResult(message = mensaje, 
                               xr = xr,
                               ea = ea,
-                              i = i)
+                              i = i,
+                              method = metodo)
         
         return RootResult(xr = xr,
                           ea = ea,
-                          i = i)
+                          i = i,
+                          method = metodo)
     
     def Newton_Raphson(self, dfunc):
+        metodo = 'Newton Raphson'
         ea = 100
         i = 0
         xrold = self.x0
+        tol = 1e-20
         
         while self.es < ea and self.imax > i:
-            if dfunc(xrold) < 1e-20:
-                raise ZeroDivisionError('División por cero debido a que la derivada es cada vez más chica en magnitud: {dfunc(xrold)}')
+            if np.abs(dfunc(xrold)) < tol:
+                raise ZeroDivisionError(f'División por cero debido a que la derivada es cada vez más chica en magnitud: {dfunc(xrold)}')
             xr = xrold - self.f(xrold)/dfunc(xrold)
             xnew = xr
             ea = error(xnew, xrold)
@@ -200,10 +210,31 @@ class Abierto:
             
         return RootResult(xr = xr, 
                           ea = ea,
-                          i = i)
+                          i = i,
+                          method = metodo)
             
         
+    def Secante(self, xb):
+        metodo = 'Secante'
+        ea = 100
+        i = 0
+        xrold = self.x0
         
+        while self.es < ea and self.imax > i:
+            xr = xrold - self.f(xrold)*(xb - xrold)/(self.f(xb) - self.f(xrold))
+            xnew = xr
+            ea = error(xnew, xrold)
+            xb = xrold
+            xrold = xnew
+            i += 1
+            
+        return RootResult(xr = xr, 
+                          ea = ea,
+                          i = i,
+                          method = metodo)
+        
+    def Secante_Modificada(self):
+        pass
         
             
 
