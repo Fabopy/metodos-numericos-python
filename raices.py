@@ -6,11 +6,18 @@ class RootResult(OptimizeResult):
     ea : float
     i : float
     
-
 def error(xu, xi):
     return np.abs(xu - xi)/xu*100
 
 class Cerrado:
+    '''
+    Clase para encontrar raíces mediante métodos cerrados. 
+    
+    Parámetros:
+        func : función a encontrar la raíz
+        xl : valor ínfimo del intervalo considerado
+        xu : valor superior del intervalo considerado
+    '''
     def __init__(self, func, xl, xu, es = None):
         self.f = func
         self.xl = xl
@@ -26,10 +33,14 @@ class Cerrado:
             a = np.array([self.xu, self.xl])
             self.xu, self.xl = np.flip(a)
             
+
         ea = 100
         i = 0
         l = self.xl
         u = self.xu
+        
+        if self.f(l)*self.f(u) > 0:
+            raise ValueError(f'El intervalo [{l}, {u}] no encierra a la raíz')
         
         while self.es < ea:
             xr = (l + u)/2
@@ -60,6 +71,9 @@ class Cerrado:
         l = self.xl
         u = self.xu
         
+        if self.f(l)*self.f(u) > 0:
+            raise ValueError(f'El intervalo [{l}, {u}] no encierra a la raíz')
+        
         while self.es < ea:
             xr = g(l, u)
             p = self.f(l)*self.f(xr)
@@ -80,7 +94,6 @@ class Cerrado:
                           i = i)
     
     def regula_falsi_mod(self):
-        #XXX Modificar esto
         if self.xl > self.xu:
             a = np.array([self.xu, self.xl])
             self.xu, self.xl = np.flip(a)
@@ -94,11 +107,13 @@ class Cerrado:
         il = 0
         iu = 0
         
+        if self.f(l)*self.f(u) > 0:
+            raise ValueError(f'El intervalo [{l}, {u}] no encierra a la raíz')
+        
         while self.es < ea:
             xr = u - fu*(l - u)/(fl - fu)
             xrold = xr
             fr = self.f(xr)
-            i += 1
             p = fl*fr
             if p < 0:
                 u = xr
@@ -127,7 +142,70 @@ class Cerrado:
                 
 
         
+class Abierto:
+    def __init__(self, func, x0, es = None, imax = None):
+        self.f = func
+        self.x0 = x0
+        if es is not None:
+            self.es = es
+        else:
+            self.es = 1e-7
+            
+        if imax is not None:
+            self.imax = imax
+        else:
+            self.imax = 500
+            
+            
+    def PuntoFijo(self):
+        '''
+        Considerar que la forma de construir g(x) puede no converger y otras sí
+        '''
+        ea = 100
+        g = self.f
+        i = 0
+        xrold = self.x0
         
+        while self.es < ea and self.imax > i:
+            xr = g(xrold)
+            xnew = xr
+            ea = error(xnew, xrold)
+            xrold = xnew
+            i += 1
+            
+        if i >= self.imax:
+            mensaje = 'Iteración máxima alcanzada'
+            return RootResult(message = mensaje, 
+                              xr = xr,
+                              ea = ea,
+                              i = i)
+        
+        return RootResult(xr = xr,
+                          ea = ea,
+                          i = i)
+    
+    def Newton_Raphson(self, dfunc):
+        ea = 100
+        i = 0
+        xrold = self.x0
+        
+        while self.es < ea and self.imax > i:
+            if dfunc(xrold) < 1e-20:
+                raise ZeroDivisionError('División por cero debido a que la derivada es cada vez más chica en magnitud: {dfunc(xrold)}')
+            xr = xrold - self.f(xrold)/dfunc(xrold)
+            xnew = xr
+            ea = error(xnew, xrold)
+            xrold = xnew
+            i += 1
+            
+        return RootResult(xr = xr, 
+                          ea = ea,
+                          i = i)
+            
+        
+        
+        
+            
 
 
 
