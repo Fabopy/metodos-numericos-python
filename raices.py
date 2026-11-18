@@ -80,6 +80,7 @@ class Cerrado:
                           i = i)
     
     def regula_falsi_mod(self):
+        #XXX Modificar esto
         if self.xl > self.xu:
             a = np.array([self.xu, self.xl])
             self.xu, self.xl = np.flip(a)

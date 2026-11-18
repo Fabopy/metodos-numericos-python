@@ -2,141 +2,173 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
-
+def _fun_wrapped(func, t, y):
+    return np.asarray(func(t, y))
 
 def euler(rhs, y0, t_eval):
     '''
-    rhs : función de lado derecho
-    y0 : condición inicial
-    t_span : intervalo de integración
+    Parámetros
+    ----------
+    rhs : callable
+        ecuación o sistema de ecuaciones diferenciales. Es necesario que como primer parámetro se pase la variable independiente (t, x, etcétera) y luego el vector estado
+        
+    y0 : sequence
+        condiciones iniciales.
+        
+    t_eval : ndarray
+        malla de integración.
+
+    Retorno
+    -------
+    X : ndarray
+        solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    n = t_eval.size
+    m = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
-    Y = np.zeros(n) ; Y[0] = y0
-    for i in range(0, n - 1, 1):
-        Y[i + 1] = Y[i] + rhs(t_eval[i], Y[i])*h
-        
-    return Y
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0) #Identifico la cantidad de ecuaciones que tiene mi sistema
+    
+    X = np.zeros((n, m)) ; X[:, 0] = y0
+    
+    for i, ti in enumerate(range(0, m - 1)):
+        X[:, i + 1] = X[:, i] + h*_fun_wrapped(rhs, ti, X[:, i])
+    
+    return X
 
-
-def euler_sistema(rhs, y0, t_eval):
-    '''
-    rhs : lista de las ecuaciones diferenciales. Solamente resuelve un sistema de ecuaciones 2x2
-    y0 : sequence de las condiciones iniciales
-    t_eval : malla
-    '''
-    #Cantidad de puntos
-    t_eval = np.asarray(t_eval)
-    n = t_eval.size
-
-    #Tamaño del paso
-    h = t_eval[1] - t_eval[0] 
-    
-    # #Cantidad de funciones rhs
-    # j = len(rhs)
-    
-    # Y = np.zeros((j, n))
-    
-    # for i in range(0, j, 1) :
-    #     Y[i][0] = y0[i]
-        
-    rhs1 = rhs[0] ; rhs2 = rhs[1]
-    
-    Y1 = np.zeros(n) ; Y1[0] = y0[0]
-    Y2 = np.zeros(n) ; Y2[0] = y0[1]
-    
-    for i in range(0, n - 1, 1):
-        Y1[i + 1] = Y1[i] + rhs1(t_eval[i], Y1[i], Y2[i])*h
-        Y2[i + 1] = Y2[i] + rhs2(t_eval[i], Y1[i], Y2[i])*h
-        
-    return Y1, Y2
 
 def heun(rhs, y0, t_eval):
     '''
-    rhs : función de lado derecho
-    y0 : condición inicial
-    t_span : intervalo de integración
+    Parámetros
+    ----------
+    rhs : callable
+        ecuación o sistema de ecuaciones diferenciales. Es necesario que como primer parámetro se pase la variable independiente (t, x, etcétera) y luego el vector estado
+        
+    y0 : sequence
+        condiciones iniciales.
+        
+    t_eval : ndarray
+        malla de integración.
+
+    Retorno
+    -------
+    X : ndarray
+        solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    n = t_eval.size
+    m = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
-    Y = np.zeros(n) ; Y[0] = y0
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0) 
     
-    for i in range(0, n - 1, 1):
-        Y[i + 1] = Y[i] + rhs(t_eval[i], Y[i])*h
-        y0p = Y[i + 1]
-        ybar = (rhs(t_eval[i], Y[i]) + rhs(t_eval[i + 1], y0p))/2
-        Y[i + 1] = Y[i] + ybar*h
+    X = np.zeros((n, m)) ; X[:, 0] = y0
     
-    return Y
+    for i, ti in enumerate(range(0, m - 1)):
+        X[:, i + 1] = X[:, i] + h*_fun_wrapped(rhs, ti, X[:, i])
+        y0p = X[:, i + 1]
+        ybar = (_fun_wrapped(rhs, ti, X[:, i]) + _fun_wrapped(rhs, t_eval[i + 1], y0p))/2
+        X[:, i + 1] = X[:, i] + ybar*h
+    
+    return X
     
 def RK2(rhs, y0, t_eval, a2 = None):
     '''
-    rhs : función de lado derecho
-    y0 : condición inicial
-    t_span : intervalo de integración
-    
-    a_2 = 1/2 Método de Heun con un solo corrector
-    a_2 = 1 Método del punto medio
-    a_2 = 2/3 Método de Ralston 
+    Parámetros
+    ----------
+    rhs : callable
+        ecuación o sistema de ecuaciones diferenciales. Es necesario que como primer parámetro se pase la variable independiente (t, x, etcétera) y luego el vector estado
+        
+    y0 : sequence
+        condiciones iniciales.
+        
+    t_eval : ndarray
+        malla de integración.
+        
+    a_2 : float or int para el caso de que a_2 = 1
+     - a_2 = 1/2 Método de Heun con un solo corrector
+     - a_2 = 1 Método del punto medio
+     - a_2 = 2/3 Método de Ralston 
+     
+     Retorno
+     -------
+     X : ndarray
+         solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    n = t_eval.size
+    A2 = [1/2, 1, 2/3]
+    
+        
+    if a2 not in A2:
+        raise ValueError(f'a2 = {a2} no corresponde a ningún método')
+    
+    m = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
-    Y = np.zeros(n) ; Y[0] = y0
-    for i in range(0, n - 1, 1):
-        if a2 == 1/2:
-            k1 = rhs(t_eval[i], Y[i])
-            k2 = rhs(t_eval[i] + 1/2*h, Y[i] + 1/2*k1*h)
-        elif a2 == 1:
-            pass
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0)
+    
+    X = np.zeros((n, m)) ; X[:, 0] = y0
+    
+    if a2 == 1/2:
+        for i, ti in enumerate(range(0, m - 1)):
+            k1 = _fun_wrapped(rhs, ti, X[:, i])
+            k2 = _fun_wrapped(rhs, ti + h, X[:, i] + k1*h)
+            X[:, i + 1] = X[:, i] + (a2*k1 + a2*k2)*h
             
-        k1 = rhs(t_eval[i], Y[i])
-        k2 = rhs(t_eval[i] + 3/4*h, Y[i] + 3/4*k1*h)
-        Y[i + 1] = Y[i] + (1/3*k1 + 2/3*k2)*h
-    
-    return Y
-    
+    if a2 == 1:
+        for i, ti in enumerate(range(0, m - 1)):
+            k1 = _fun_wrapped(rhs, ti, X[:, i])
+            k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
+            X[:, i + 1] = X[:, i] + a2*k2*h
+        
+    if a2 == 2/3:
+        for i, ti in enumerate(range(0, m - 1)):
+            k1 = _fun_wrapped(rhs, ti, X[:, i])
+            k2 = _fun_wrapped(rhs, ti + 3/4*h, X[:, i] + 3/4*k1*h)
+            X[:, i + 1] = X[:, i] + (1/3*k1 + a2*k2)*h
+        
+    return X
+        
 
 def RK4(rhs, y0, t_eval):
     '''
-    rhs : lista de las ecuaciones diferenciales. Solamente resuelve un sistema de ecuaciones
-    y0 : condición inicial
-    t_span : intervalo de integración
+    Parámetros
+    ----------
+    rhs : callable
+        ecuación o sistema de ecuaciones diferenciales. Es necesario que como primer parámetro se pase la variable independiente (t, x, etcétera) y luego el vector estado
+        
+    y0 : sequence
+        condiciones iniciales.
+        
+    t_eval : ndarray
+        malla de integración.
+        
+    a_2 : float or int para el caso de que a_2 = 1
+     - a_2 = 1/2 Método de Heun con un solo corrector
+     - a_2 = 1 Método del punto medio
+     - a_2 = 2/3 Método de Ralston 
+     
+     Retorno
+     -------
+     X : ndarray
+         solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    n = t_eval.size
+    m = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
-    rhs1 = rhs[0] ; rhs2 = rhs[1]
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0)
     
-    Y1 = np.zeros(n) ; Y1[0] = y0[0]
-    Y2 = np.zeros(n) ; Y2[0] = y0[1]
+    X = np.zeros((n, m)) ; X[:, 0] = y0
     
-    for i in range(0, n - 1, 1):
-        #k1
-        k11 = rhs1(t_eval[i], Y1[i], Y2[i])
-        k12 = rhs2(t_eval[i], Y1[i], Y2[i])
+    for i, ti in enumerate(range(0, m - 1)):
+        k1 = _fun_wrapped(rhs, ti, X[:, i])
+        k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
+        k3 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k2*h)
+        k4 = _fun_wrapped(rhs, ti + h, X[:, i] + k3*h)
         
-        #k2
-        k21 = rhs1(t_eval[i] + 1/2*h, Y1[i] + 1/2*k11*h, Y2[i] + 1/2*k12*h)
-        k22 = rhs2(t_eval[i] + 1/2*h, Y1[i] + 1/2*k11*h, Y2[i] + 1/2*k12*h)
+        X[:, i + 1] = X[:, i] + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
         
-        #k3
-        k31 = rhs1(t_eval[i] + 1/2*h, Y1[i] + 1/2*k21*h, Y2[i] + 1/2*k22*h)
-        k32 = rhs2(t_eval[i] + 1/2*h, Y1[i] + 1/2*k21*h, Y2[i] + 1/2*k22*h)
-        
-        #k4
-        k41 = rhs1(t_eval[i] + h, Y1[i] + k31*h, Y2[i] + k32*h)
-        k42 = rhs2(t_eval[i] + h, Y1[i] + k31*h, Y2[i] + k32*h)
-        
-        Y1[i+1] = Y1[i] + 1/6*(k11 + 2*k21 + 2*k31 + k41)*h
-        Y2[i+1] = Y2[i] + 1/6*(k12 + 2*k22 + 2*k32 + k42)*h
-        
-    
-    return Y1, Y2
-        
-
+    return X
 
  
 if __name__ == '__main__':
