@@ -7,7 +7,7 @@ class RootResult(OptimizeResult):
     i : float
     
 def error(xu, xi):
-    return np.abs(xu - xi)/xu*100
+    return np.abs((xu - xi)/xu)*100
 
 class Cerrado:
     '''
@@ -208,6 +208,14 @@ class Abierto:
             xrold = xnew
             i += 1
             
+        if i >= self.imax:
+            mensaje = 'Iteración máxima alcanzada'
+            return RootResult(message = mensaje, 
+                              xr = xr,
+                              ea = ea,
+                              i = i,
+                              method = metodo)
+        
         return RootResult(xr = xr, 
                           ea = ea,
                           i = i,
@@ -227,23 +235,124 @@ class Abierto:
             xb = xrold
             xrold = xnew
             i += 1
+        
+        if i >= self.imax:
+            mensaje = 'Iteración máxima alcanzada'
+            return RootResult(message = mensaje, 
+                              xr = xr,
+                              ea = ea,
+                              i = i,
+                              method = metodo)
             
         return RootResult(xr = xr, 
                           ea = ea,
                           i = i,
                           method = metodo)
         
-    def Secante_Modificada(self):
-        pass
+    def Secante_Modificada(self, deltax):
+        metodo = 'Secante modificado'
+        ea = 100
+        i = 0
+        xrold = self.x0
         
+        while self.es < ea and self.imax > i:
+            xr = xrold - deltax*self.f(xrold)/(self.f(xrold + deltax) - self.f(xrold))
+            xnew = xr
+            ea = error(xnew, xrold)
+            xrold = xnew
+            i += 1
+            
+            
+        if i >= self.imax:
+            mensaje = 'Iteración máxima alcanzada'
+            return RootResult(message = mensaje, 
+                              xr = xr,
+                              ea = ea,
+                              i = i,
+                              method = metodo)
+        
+        return RootResult(xr = xr,
+                          ea = ea,
+                          i = i,
+                          method = metodo)    
+        
+    def brent(self):
+        pass
+    
+    def mroot(self):
+        pass
             
 
-
-
+def muller(f, /, x0, x1, x2, es = None, imax = None):
+    metodo = 'Müller'
+    '''
+    El método de Muller es un método para hallar raíces de polinomios.
+    Se necesitan 3 puntos
+    '''
+    
+    if es is None and imax is None:
+        es = 1e-7 ; imax = 500
+        
+    elif es is not None and imax is None:
+        es = es ; imax = 500
+        
+    elif es is None and imax is not None:
+        es = 1e-7 ; imax = imax
+        
+    else:
+        es = es ; imax = imax
+        
+    ea = 100
+    i = 0
+        
+    while es < ea and imax > i:
+        f0 = f(x0)
+        f1 = f(x1)
+        f2 = f(x2)
+        
+        h0 = x1 - x0 ; h1 = x2 - x1
+        delta0 = (f1 - f0)/h0 ; delta1 = (f2 - f1)/h1
+        
+        a = (delta1 - delta0)/(h1 + h0) #En el libro figura h1 - h0, en realidad es h1 + h0
+        b = a*h1 + delta1 
+        c = f2
+        
+        sign = b
+        
+        if sign > 0:
+            x3 = x2 + (-2*c)/(b + np.sqrt(b**2 - 4*a*c + 0j))    
+        else:
+            x3 = x2 + (-2*c)/(b - np.sqrt(b**2 - 4*a*c + 0j))
+        
+        ea = error(x3, x2)
+        
+        x0 = x1 ; x1 = x2 ; x2 = x3
+        
+        i += 1
+            
+    xr = x3
+    
+    if i >= imax:
+        mensaje = 'Iteración máxima alcanzada'
+        return RootResult(message = mensaje, 
+                          xr = xr,
+                          ea = ea,
+                          i = i,
+                          method = metodo)
+    
+    return RootResult(xr = xr,
+                      ea = ea,
+                      i = i,
+                      method = metodo)
 
 
     
+def bairstow():
+    pass
     
+    
+
+
 
 
 
