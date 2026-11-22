@@ -170,6 +170,19 @@ def RK4(rhs, y0, t_eval):
         
     return X
 
+def RKF(rhs, y0, t_eval):
+    m = t_eval.size
+    h = t_eval[1] - t_eval[0] 
+    
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0)
+    
+    X = np.zeros((n, m)) ; X[:, 0] = y0
+    
+    for i, ti in enumerate(range(0, m - 1)):
+        k1 = X(ti, X[:, i])
+    
+
  
 if __name__ == '__main__':
     pass
