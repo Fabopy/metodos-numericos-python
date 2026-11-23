@@ -180,7 +180,16 @@ def RKF(rhs, y0, t_eval):
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
     for i, ti in enumerate(range(0, m - 1)):
-        k1 = X(ti, X[:, i])
+        k1 = _fun_wrapped(rhs, ti, X[:, i])
+        k2 = _fun_wrapped(rhs, ti + 1/5*h, X[:, i] + 1/5*k1*h)
+        k3 = _fun_wrapped(rhs, ti + 3/10*h, X[:, i] + 3/40*k1*h + 9/40*k2*h)
+        k4 = _fun_wrapped(rhs, ti + 3/5*h, X[:, i] + h*(3/10*k1 - 9/10*k2 + 6/5*k3))
+        k5 = _fun_wrapped(rhs, ti + h, X[:, i] + h*(-11/54*k1 + 5/2*k2 - 70/27*k3 + 35/27*k4))
+        k6 = _fun_wrapped(rhs, ti + 7/8*h, X[:, i] + h*(1631/55296*k1 + 175/512*k2 + 575/13824*k3 + 44275/110592*k4 + 253/4096*k5))
+        
+        X[:, i + 1] = X[:, i] + (2825/27648*k1 + 18575/48384*k3 + 13525/55296*k4 + 277/14336*k5 + 1/4*k6)*h #acá en el chapra tiene un error, dice 18575/43384, pero en la figura 25.21 está bien escrito
+        
+    return X
     
 
  
