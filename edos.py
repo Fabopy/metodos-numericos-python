@@ -31,7 +31,7 @@ def euler(rhs, y0, t_eval):
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
-    for i, ti in enumerate(range(0, m - 1)):
+    for i, ti in enumerate(t_eval[:-1]):
         X[:, i + 1] = X[:, i] + h*_fun_wrapped(rhs, ti, X[:, i])
     
     return X
@@ -63,7 +63,7 @@ def heun(rhs, y0, t_eval):
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
-    for i, ti in enumerate(range(0, m - 1)):
+    for i, ti in enumerate(t_eval[:-1]):
         X[:, i + 1] = X[:, i] + h*_fun_wrapped(rhs, ti, X[:, i])
         y0p = X[:, i + 1]
         ybar = (_fun_wrapped(rhs, ti, X[:, i]) + _fun_wrapped(rhs, t_eval[i + 1], y0p))/2
@@ -109,19 +109,19 @@ def RK2(rhs, y0, t_eval, a2 = None):
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
     if a2 == 1/2:
-        for i, ti in enumerate(range(0, m - 1)):
+        for i, ti in enumerate(t_eval[:-1]):
             k1 = _fun_wrapped(rhs, ti, X[:, i])
             k2 = _fun_wrapped(rhs, ti + h, X[:, i] + k1*h)
             X[:, i + 1] = X[:, i] + (a2*k1 + a2*k2)*h
             
     if a2 == 1:
-        for i, ti in enumerate(range(0, m - 1)):
+        for i, ti in enumerate(t_eval[:-1]):
             k1 = _fun_wrapped(rhs, ti, X[:, i])
             k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
             X[:, i + 1] = X[:, i] + a2*k2*h
         
     if a2 == 2/3:
-        for i, ti in enumerate(range(0, m - 1)):
+        for i, ti in enumerate(t_eval[:-1]):
             k1 = _fun_wrapped(rhs, ti, X[:, i])
             k2 = _fun_wrapped(rhs, ti + 3/4*h, X[:, i] + 3/4*k1*h)
             X[:, i + 1] = X[:, i] + (1/3*k1 + a2*k2)*h
@@ -155,7 +155,7 @@ def RK4(rhs, y0, t_eval):
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
-    for i, ti in enumerate(range(0, m - 1)):
+    for i, ti in enumerate(t_eval[:-1]):
         k1 = _fun_wrapped(rhs, ti, X[:, i])
         k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
         k3 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k2*h)
@@ -191,7 +191,7 @@ def RKF(rhs, y0, t_eval):
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
-    for i, ti in enumerate(range(0, m - 1)):
+    for i, ti in enumerate(t_eval[:-1]):
         k1 = _fun_wrapped(rhs, ti, X[:, i])
         k2 = _fun_wrapped(rhs, ti + 1/5*h, X[:, i] + 1/5*k1*h)
         k3 = _fun_wrapped(rhs, ti + 3/10*h, X[:, i] + 3/40*k1*h + 9/40*k2*h)
@@ -230,6 +230,14 @@ def RK4A(rhs, y0, t_eval, atol = None):
     else:
         atol = 1e-6
         
+    def MRK4(f, ti, yi, h):
+        k1 = _fun_wrapped(f, ti, yi)
+        k2 = _fun_wrapped(f, ti + 1/2*h, yi + 1/2*k1*h)
+        k3 = _fun_wrapped(f, ti + 1/2*h, yi + 1/2*k2*h)
+        k4 = _fun_wrapped(f, ti + h, yi + k3*h)
+        
+        return yi + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
+        
     m = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
@@ -241,54 +249,68 @@ def RK4A(rhs, y0, t_eval, atol = None):
     
     alpha = np.array([0.2, 0.25])
     
-    for i, ti in enumerate(range(0, m - 1)):
-        k1 = _fun_wrapped(rhs, ti, X[:, i])
-        k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
-        k3 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k2*h)
-        k4 = _fun_wrapped(rhs, ti + h, X[:, i] + k3*h)
+    for i, ti in enumerate(t_eval[:-1]):
+        yi = X[:, i]
+        y1 = MRK4(rhs, ti, yi, h) #Predicción con un solo paso
+        y2m = MRK4(rhs, ti, yi, h/2) #Predicción con dos medios pasos
+        y2 = MRK4(rhs, ti + h/2, y2m, h/2) 
+        d = y2 - y1
+        y2 = y2 + d/15
         
-        X[:, i + 1] = X[:, i] + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
-        
-        
-        y = np.max(X[:, i + 1]) #Tengo que ver cuál es el valor que mayor cambia para considerar el nuevo paso h 
-        y_old = np.max(X[:, i])
-        dy = np.max(_fun_wrapped(rhs, ti, X[:, i]))
-        h_old = h
-        y_escala = np.abs(y) + np.abs(h_old*dy)
-        d_nuevo = atol*y_escala
-        d_actual = np.abs((y - y_old)/y*100)
-        if d_nuevo >= d_actual:
-            h_new = h_old*np.abs(d_nuevo/d_actual)**alpha[0]
-        else:
-            h_new = h_old*np.abs(d_nuevo/d_actual)**alpha[1]
-            
-        h = h_new
+        X[:, i + 1] = y2
         
     return X
             
 
 if __name__ == '__main__':
     fig = plt.figure(figsize = (14, 7), dpi = 140)
-    plt.grid(linestyle = '--')
-    plt.xlabel('t')
-    plt.ylabel('solution')
+    ax0, ax1 = fig.subplots(2, 1)
     
-    def dydx(x, y):
-        return [10*np.exp(-(x-2)**2/(2*(0.075)**2)) - 0.6*y]
+    def lotka_volterra(t, S):
+        A = 1.5 ; B = 1 ; C = 3 ; D = 1
+        x, y = S
+        dx = A*x - B*x*y
+        dy = -C*y + D*x*y
+        
+        dS = [dx, dy]
+        return dS
     
-    y0 = 0.5
-    t0 = 0 ; tf = 4
-    tmalla = np.linspace(t0, tf, 1000)
     
-    SOLrk4 = RK4A(dydx, [y0], tmalla)
-    SOLivp = solve_ivp(dydx, [t0, tf], [y0], t_eval=tmalla, method = 'DOP853')
+    x0 = 10 ; y0 = 5
+    t0 = 0 ; tf = 10
+    n = 50 #Con esta cantidad de puntos se puede ver la ventaja de usar el RK4A
+    t_malla = np.linspace(t0, tf, n)
+    metodo = 'RK45'
     
-    yx = SOLrk4.T
-    yxivp = SOLivp.y.T
-    solreal = lambda x : y0*np.exp(-0.6*x)
     
-    plt.plot(tmalla, yx)
-    plt.plot(tmalla, yxivp)
+    SOLivp = solve_ivp(lotka_volterra, t_span = [t0, tf], y0 = [x0, y0], t_eval = t_malla, method = metodo)
+    
+    SOLrk4 = RK4(lotka_volterra, y0 = [x0, y0], t_eval = t_malla)
+    
+    #Método adaptativo
+    SOLrk4A = RK4A(lotka_volterra, y0 = [x0, y0], t_eval = t_malla)
+    
+    
+    ax0.plot(t_malla, SOLivp.y[0], color = 'red', label = 'x(t)')
+    ax0.plot(t_malla, SOLivp.y[1], color = 'blue', label = 'y(t)')
+
+    ax0.plot(t_malla, SOLrk4A[0], color = 'red', label = 'x(t) con RK4 adaptativo', linestyle = (0, (1, 1)))
+    ax0.plot(t_malla, SOLrk4A[1], color = 'blue', label = 'y(t) con RK4 adaptativo', linestyle = (0, (1, 1)))
+    
+    ax0.legend()
+    
+    
+    ax1.plot(t_malla, SOLivp.y[0], color = 'red', label = 'x(t)')
+    ax1.plot(t_malla, SOLivp.y[1], color = 'blue', label = 'y(t)')
+
+    ax1.plot(t_malla, SOLrk4[0], color = 'red', label = 'x(t) con RK4', linestyle = '-.')
+    ax1.plot(t_malla, SOLrk4[1], color = 'blue', label = 'y(t) con RK4', linestyle = '-.')
+    
+    
+    ax1.legend()
+    
+    plt.tight_layout()
+    
     
     
 
