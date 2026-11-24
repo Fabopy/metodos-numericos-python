@@ -141,12 +141,7 @@ def RK4(rhs, y0, t_eval):
         
     t_eval : ndarray
         malla de integración.
-        
-    a_2 : float or int para el caso de que a_2 = 1
-     - a_2 = 1/2 Método de Heun con un solo corrector
-     - a_2 = 1 Método del punto medio
-     - a_2 = 2/3 Método de Ralston 
-     
+
      Retorno
      -------
      X : ndarray
@@ -171,6 +166,23 @@ def RK4(rhs, y0, t_eval):
     return X
 
 def RKF(rhs, y0, t_eval):
+    '''
+    Parámetros
+    ----------
+    rhs : callable
+        ecuación o sistema de ecuaciones diferenciales. Es necesario que como primer parámetro se pase la variable independiente (t, x, etcétera) y luego el vector estado
+        
+    y0 : sequence
+        condiciones iniciales.
+        
+    t_eval : ndarray
+        malla de integración.
+
+     Retorno
+     -------
+     X : ndarray
+         solución a la ecuación o sistema de ecuaciones diferenciales.
+    '''
     m = t_eval.size
     h = t_eval[1] - t_eval[0] 
     
@@ -192,8 +204,93 @@ def RKF(rhs, y0, t_eval):
     return X
     
 
- 
+def RK4A(rhs, y0, t_eval, atol = None):
+    '''
+    Parámetros
+    ----------
+    rhs : callable
+        ecuación o sistema de ecuaciones diferenciales. Es necesario que como primer parámetro se pase la variable independiente (t, x, etcétera) y luego el vector estado
+        
+    y0 : sequence
+        condiciones iniciales.
+        
+    t_eval : ndarray
+        malla de integración.
+        
+    atol : Opcional
+        Tolerancia absoluta. Como valor default es 1e-6
+
+     Retorno
+     -------
+     X : ndarray
+         solución a la ecuación o sistema de ecuaciones diferenciales.
+    '''
+    if atol is not None:
+        atol = atol
+    else:
+        atol = 1e-6
+        
+    m = t_eval.size
+    h = t_eval[1] - t_eval[0] 
+    
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0)
+    
+    
+    X = np.zeros((n, m)) ; X[:, 0] = y0
+    
+    alpha = np.array([0.2, 0.25])
+    
+    for i, ti in enumerate(range(0, m - 1)):
+        k1 = _fun_wrapped(rhs, ti, X[:, i])
+        k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
+        k3 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k2*h)
+        k4 = _fun_wrapped(rhs, ti + h, X[:, i] + k3*h)
+        
+        X[:, i + 1] = X[:, i] + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
+        
+        
+        y = np.max(X[:, i + 1]) #Tengo que ver cuál es el valor que mayor cambia para considerar el nuevo paso h 
+        y_old = np.max(X[:, i])
+        dy = np.max(_fun_wrapped(rhs, ti, X[:, i]))
+        h_old = h
+        y_escala = np.abs(y) + np.abs(h_old*dy)
+        d_nuevo = atol*y_escala
+        d_actual = np.abs((y - y_old)/y*100)
+        if d_nuevo >= d_actual:
+            h_new = h_old*np.abs(d_nuevo/d_actual)**alpha[0]
+        else:
+            h_new = h_old*np.abs(d_nuevo/d_actual)**alpha[1]
+            
+        h = h_new
+        
+    return X
+            
+
 if __name__ == '__main__':
-    pass
+    fig = plt.figure(figsize = (14, 7), dpi = 140)
+    plt.grid(linestyle = '--')
+    plt.xlabel('t')
+    plt.ylabel('solution')
+    
+    def dydx(x, y):
+        return [10*np.exp(-(x-2)**2/(2*(0.075)**2)) - 0.6*y]
+    
+    y0 = 0.5
+    t0 = 0 ; tf = 4
+    tmalla = np.linspace(t0, tf, 1000)
+    
+    SOLrk4 = RK4A(dydx, [y0], tmalla)
+    SOLivp = solve_ivp(dydx, [t0, tf], [y0], t_eval=tmalla, method = 'DOP853')
+    
+    yx = SOLrk4.T
+    yxivp = SOLivp.y.T
+    solreal = lambda x : y0*np.exp(-0.6*x)
+    
+    plt.plot(tmalla, yx)
+    plt.plot(tmalla, yxivp)
+    
+    
+
     
     
