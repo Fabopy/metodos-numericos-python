@@ -5,6 +5,16 @@ import matplotlib.pyplot as plt
 def _fun_wrapped(func, t, y):
     return np.asarray(func(t, y))
 
+def _argumentos(y0, t_eval):
+    m = t_eval.size
+    h = t_eval[1] - t_eval[0] 
+    
+    y0 = np.asarray(y0, dtype = float)
+    n = len(y0) #Identifico la cantidad de ecuaciones que tiene mi sistema
+    
+    return m, n, h
+    
+
 def euler(rhs, y0, t_eval):
     '''
     Parámetros
@@ -23,11 +33,7 @@ def euler(rhs, y0, t_eval):
     X : ndarray
         solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    m = t_eval.size
-    h = t_eval[1] - t_eval[0] 
-    
-    y0 = np.asarray(y0, dtype = float)
-    n = len(y0) #Identifico la cantidad de ecuaciones que tiene mi sistema
+    m, n, h = _argumentos(y0, t_eval)
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
@@ -238,16 +244,9 @@ def RK4A(rhs, y0, t_eval, atol = None):
         
         return yi + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
         
-    m = t_eval.size
-    h = t_eval[1] - t_eval[0] 
-    
-    y0 = np.asarray(y0, dtype = float)
-    n = len(y0)
-    
-    
+    m, n, h = _argumentos(y0, t_eval)
+ 
     X = np.zeros((n, m)) ; X[:, 0] = y0
-    
-    alpha = np.array([0.2, 0.25])
     
     for i, ti in enumerate(t_eval[:-1]):
         yi = X[:, i]
