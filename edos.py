@@ -61,11 +61,7 @@ def heun(rhs, y0, t_eval):
     X : ndarray
         solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    m = t_eval.size
-    h = t_eval[1] - t_eval[0] 
-    
-    y0 = np.asarray(y0, dtype = float)
-    n = len(y0) 
+    m, n, h = _argumentos(y0, t_eval)
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
@@ -106,11 +102,7 @@ def RK2(rhs, y0, t_eval, a2 = None):
     if a2 not in A2:
         raise ValueError(f'a2 = {a2} no corresponde a ningún método')
     
-    m = t_eval.size
-    h = t_eval[1] - t_eval[0] 
-    
-    y0 = np.asarray(y0, dtype = float)
-    n = len(y0)
+    m, n, h = _argumentos(y0, t_eval)
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
@@ -153,11 +145,7 @@ def RK4(rhs, y0, t_eval):
      X : ndarray
          solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    m = t_eval.size
-    h = t_eval[1] - t_eval[0] 
-    
-    y0 = np.asarray(y0, dtype = float)
-    n = len(y0)
+    m, n, h = _argumentos(y0, t_eval)
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
@@ -189,11 +177,7 @@ def RKF(rhs, y0, t_eval):
      X : ndarray
          solución a la ecuación o sistema de ecuaciones diferenciales.
     '''
-    m = t_eval.size
-    h = t_eval[1] - t_eval[0] 
-    
-    y0 = np.asarray(y0, dtype = float)
-    n = len(y0)
+    m, n, h = _argumentos(y0, t_eval)
     
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
