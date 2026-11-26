@@ -41,6 +41,10 @@ def eulerIm(rhs, y0, t_eval, a):
     return X
 
 
+def heunIm(rhs, y0, t_eval):
+    pass
+
+
 if __name__ == '__main__':
     DY_RIGIDA = lambda t, y : -1000*y + 3000 - 2000*np.exp(-t)
     IVC = 0
