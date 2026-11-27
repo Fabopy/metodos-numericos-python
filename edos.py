@@ -14,35 +14,54 @@ def _argumentos(y0, t_eval):
     
     return m, n, h
 
+def _phi(A, K):
+    A = np.asarray(A, dtype = float)
+    K = np.asarray(K, dtype = float)
+    return np.dot(A, K)
+    
+
 def _euler(f, ti, yi, h):
-    return yi + f(ti, yi)*h
+    return yi + _fun_wrapped(f, ti, yi)*h
 
 def _heun(f, ti, ti1, yi, h):
     yii = yi + f(ti, yi)*h
-    ybar = (f(ti, yi) + f(ti1, yii))/2
+    ybar = (_fun_wrapped(f, ti, yi) + _fun_wrapped(f, ti1, yii))/2
     return yi + ybar*h
 
 def _rk2(f, ti, yi, h, a2):
     a1 = 1 - a2
     p1 = 1/(2*a2)
     q11 = p1
-    k1 = f(ti, yi)
-    k2 = f(ti + p1*h, yi + q11*k1*h)
-    return yi + (a1*k1 + a2*k2)*h
+    k1 = _fun_wrapped(f, ti, yi)
+    k2 = _fun_wrapped(f, ti + p1*h, yi + q11*k1*h)
+    phi = _phi([a1, a2], [k1, k2])
+    return yi + phi*h
 
 def _rk4(f, ti, yi, h):
+    a1 = 1/6 ; a2 = 1/3 ; a3 = 1/3 ; a4 = 1/6
     k1 = _fun_wrapped(f, ti, yi)
     k2 = _fun_wrapped(f, ti + 1/2*h, yi + 1/2*k1*h)
     k3 = _fun_wrapped(f, ti + 1/2*h, yi + 1/2*k2*h)
     k4 = _fun_wrapped(f, ti + h, yi + k3*h)
+    phi = _phi([a1, a2, a3, a4], [k1, k2, k3, k4])
     
-    return yi + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
+    return yi + phi*h
 
 def _rkf(f, ti, yi, h):
-    pass
+    a1 = 2825/27648 ; a2 = 0 ; a3 = 18575/48384 ; a4 = 13525/55296 ; a5 = 277/14336 ; a6 = 1/4
+    k1 = _fun_wrapped(f, ti, yi)
+    k2 = _fun_wrapped(f, ti + 1/5*h, yi + 1/5*k1*h)
+    k3 = _fun_wrapped(f, ti + 3/10*h, yi + 3/40*k1*h + 9/40*k2*h)
+    k4 = _fun_wrapped(f, ti + 3/5*h, yi + h*(3/10*k1 - 9/10*k2 + 6/5*k3))
+    k5 = _fun_wrapped(f, ti + h, yi + h*(-11/54*k1 + 5/2*k2 - 70/27*k3 + 35/27*k4))
+    k6 = _fun_wrapped(f, ti + 7/8*h, yi + h*(1631/55296*k1 + 175/512*k2 + 575/13824*k3 + 44275/110592*k4 + 253/4096*k5))
+    phi = _phi([a1, a2, a3, a4, a5, a6], [k1, k2, k3, k4, k5, k6])
+    
+    return yi + phi*h
 
 def _rka(f, ti, yi, h):
     pass
+
 
 
 
@@ -170,12 +189,8 @@ def RK4(rhs, y0, t_eval):
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
     for i, ti in enumerate(t_eval[:-1]):
-        k1 = _fun_wrapped(rhs, ti, X[:, i])
-        k2 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k1*h)
-        k3 = _fun_wrapped(rhs, ti + 1/2*h, X[:, i] + 1/2*k2*h)
-        k4 = _fun_wrapped(rhs, ti + h, X[:, i] + k3*h)
-        
-        X[:, i + 1] = X[:, i] + 1/6*(k1 + 2*k2 + 2*k3 + k4)*h
+        yi = X[:, i]
+        X[:, i + 1] = _rk4(rhs, ti, yi, h)
         
     return X
 
@@ -202,14 +217,8 @@ def RKF(rhs, y0, t_eval):
     X = np.zeros((n, m)) ; X[:, 0] = y0
     
     for i, ti in enumerate(t_eval[:-1]):
-        k1 = _fun_wrapped(rhs, ti, X[:, i])
-        k2 = _fun_wrapped(rhs, ti + 1/5*h, X[:, i] + 1/5*k1*h)
-        k3 = _fun_wrapped(rhs, ti + 3/10*h, X[:, i] + 3/40*k1*h + 9/40*k2*h)
-        k4 = _fun_wrapped(rhs, ti + 3/5*h, X[:, i] + h*(3/10*k1 - 9/10*k2 + 6/5*k3))
-        k5 = _fun_wrapped(rhs, ti + h, X[:, i] + h*(-11/54*k1 + 5/2*k2 - 70/27*k3 + 35/27*k4))
-        k6 = _fun_wrapped(rhs, ti + 7/8*h, X[:, i] + h*(1631/55296*k1 + 175/512*k2 + 575/13824*k3 + 44275/110592*k4 + 253/4096*k5))
-        
-        X[:, i + 1] = X[:, i] + (2825/27648*k1 + 18575/48384*k3 + 13525/55296*k4 + 277/14336*k5 + 1/4*k6)*h #acá en el chapra tiene un error, dice 18575/43384, pero en la figura 25.21 está bien escrito
+        yi = X[:, i]
+        X[:, i + 1] = _rkf(rhs, ti, yi, h)
         
     return X
     
@@ -247,8 +256,8 @@ def RK4A(rhs, y0, t_eval, atol = None):
     for i, ti in enumerate(t_eval[:-1]):
         yi = X[:, i]
         y1 = _rk4(rhs, ti, yi, h) #Predicción con un solo paso
-        y2m = _rk4(rhs, ti, yi, h/2) #Predicción con dos medios pasos
-        y2 = _rk4(rhs, ti + h/2, y2m, h/2) 
+        y2m = _rk4(rhs, ti, yi, h/2) #Predicción con dos medios pasos 
+        y2 = _rk4(rhs, ti + h/2, y2m, h/2) #Predicción con dos medios pasos 
         d = y2 - y1
         y2 = y2 + d/15
         
